@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-Time Event Sync</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Real-Time Event Synchronization</h2>
+
+<input type="text" id="msg" placeholder="Enter event message">
+<button onclick="sendEvent()">Send Event</button>
+
+<ul id="events"></ul>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+function sendEvent() {
+    const message = document.getElementById("msg").value;
+    socket.emit("newEvent", message);
+    document.getElementById("msg").value = "";
+}
+
+// Receive synchronized events
+socket.on("syncEvent", (data) => {
+    const li = document.createElement("li");
+    li.textContent = data;
+    document.getElementById("events").appendChild(li);
+});
+</script>
+
+</body>
+</html>
