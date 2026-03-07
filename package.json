@@ -1,20 +1,16 @@
 {
-  "dependencies": {
-    "express": "^5.2.1",
-    "express-session": "^1.19.0",
-    "mysql2": "^3.18.2",
-    "socket.io": "^4.8.3"
-  },
-  "name": "fsd",
+  "name": "student-registration",
   "version": "1.0.0",
-  "description": "",
-  "main": "db.js",
+  "description": "Student Registration Form using HTML, CSS, Node.js and MySQL",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Student",
   "license": "ISC",
-  "type": "commonjs"
+  "dependencies": {
+    "express": "^4.19.2",
+    "mysql2": "^3.11.0",
+    "body-parser": "^1.20.2"
+  }
 }
