@@ -1,78 +1,53 @@
 const express = require("express");
 const mysql = require("mysql2");
+const cors = require("cors");
+const path = require("path");
+
 const app = express();
 
+app.use(cors());
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
-/* MySQL Connection */
 const db = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "manju",
-    database: "student_db"
+    password: "manju", // change if needed
+    database: "login"
 });
 
-db.connect(err => {
+db.connect((err) => {
     if (err) {
-        console.log("❌ Database Error:", err);
+        console.log("❌ Database connection failed:", err);
     } else {
-        console.log("✅ MySQL Connected");
+        console.log("✅ Connected to MySQL");
     }
 });
+// ================= LOGIN API =================
+app.post("/login", (req, res) => {
+    const { email, password } = req.body;
 
-/* ==============================
-   GET STUDENTS (SORT + FILTER)
-   ============================== */
-app.get("/students", (req, res) => {
-    const { sort, course } = req.query;
+    const sql = "SELECT * FROM users WHERE email=? AND password=?";
 
-    let sql = "SELECT * FROM students";
-    let conditions = [];
+    db.query(sql, [email, password], (err, result) => {
 
-    if (course) {
-        conditions.push(`course='${course}'`);
-    }
-
-    if (conditions.length > 0) {
-        sql += " WHERE " + conditions.join(" AND ");
-    }
-
-    if (sort === "name") {
-        sql += " ORDER BY name";
-    } else if (sort === "dob") {
-        sql += " ORDER BY dob";
-    }
-
-    db.query(sql, (err, results) => {
         if (err) {
-            console.log(err);
-            return res.send("Database Error");
+            console.log("❌ EXACT SQL ERROR:", err); // 👈 IMPORTANT
+            return res.status(500).send("Database Error");
         }
-        res.json(results);
+
+        console.log(result); // 👈 DEBUG
+
+        if (result.length > 0) {
+            res.send("success");
+        } else {
+            res.send("Invalid Email or Password");
+        }
     });
 });
 
-/* ==============================
-   COUNT STUDENTS PER DEPARTMENT
-   ============================== */
-app.get("/count", (req, res) => {
-    const sql = `
-        SELECT course, COUNT(*) AS total
-        FROM students
-        GROUP BY course
-    `;
-
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.log(err);
-            return res.send("Database Error");
-        }
-        res.json(results);
-    });
-});
-
-/* Server */
 app.listen(3000, () => {
-    console.log("🚀 Server running at http://localhost:3000/dashboard.html");
+    console.log("🚀 Server running at http://localhost:3000");
+    console.log("🚀 Server running at http://localhost:3000/login.html");
+    console.log("🚀 Server running at http://localhost:3000/login.feedback.html");
 });
