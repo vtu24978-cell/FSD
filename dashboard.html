@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 30px;
+        }
+
+        select {
+            padding: 6px;
+            margin-right: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #aaa;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background: #f2f2f2;
+        }
+
+        ul {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>📊 Student Data Dashboard</h2>
+
+<!-- Controls -->
+<label>Sort By:</label>
+<select id="sort" onchange="loadStudents()">
+    <option value="">None</option>
+    <option value="name">Name</option>
+    <option value="dob">DOB</option>
+</select>
+
+<label>Department:</label>
+<select id="course" onchange="loadStudents()">
+    <option value="">All</option>
+    <option value="CSE">CSE</option>
+    <option value="ECE">ECE</option>
+    <option value="IT">IT</option>
+</select>
+
+<!-- Student Table -->
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Course</th>
+            <th>DOB</th>
+            <th>Phone</th>
+        </tr>
+    </thead>
+    <tbody id="studentData"></tbody>
+</table>
+
+<h3>📈 Students Count per Department</h3>
+<ul id="countList"></ul>
+
+<script>
+function loadStudents() {
+    const sort = document.getElementById("sort").value;
+    const course = document.getElementById("course").value;
+
+    fetch(`/students?sort=${sort}&course=${course}`)
+        .then(res => res.json())
+        .then(data => {
+            let rows = "";
+            data.forEach(s => {
+                rows += `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${s.email}</td>
+                        <td>${s.course}</td>
+                        <td>${s.dob}</td>
+                        <td>${s.phone}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById("studentData").innerHTML = rows;
+        });
+}
+
+function loadCount() {
+    fetch("/count")
+        .then(res => res.json())
+        .then(data => {
+            let list = "";
+            data.forEach(c => {
+                list += `<li>${c.course} : ${c.total}</li>`;
+            });
+            document.getElementById("countList").innerHTML = list;
+        });
+}
+
+loadStudents();
+loadCount();
+</script>
+
+</body>
+</html>

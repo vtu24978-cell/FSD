@@ -1,16 +1,13 @@
 {
-  "name": "student-registration",
+  "name": "fsd4-dashboard",
   "version": "1.0.0",
-  "description": "Student Registration Form using HTML, CSS, Node.js and MySQL",
+  "description": "Student Data Retrieval & Sorting Dashboard",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "author": "Student",
-  "license": "ISC",
   "dependencies": {
     "express": "^4.19.2",
-    "mysql2": "^3.11.0",
-    "body-parser": "^1.20.2"
+    "mysql2": "^3.9.7"
   }
 }
