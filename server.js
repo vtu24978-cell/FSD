@@ -2,52 +2,54 @@ const express = require("express");
 const mysql = require("mysql2");
 const app = express();
 
+app.use(express.json());
 app.use(express.static("public"));
 
 const db = mysql.createConnection({
     host: "localhost",
     user: "root",
     password: "manju",
-    database: "order_db"
+    database: "payment_db"
 });
 
 db.connect(() => console.log("✅ MySQL Connected"));
 
-/* Order History */
-app.get("/orders", (req, res) => {
-    const sql = `
-        SELECT c.name, p.product_name, o.quantity,
-               p.price, (o.quantity*p.price) AS total, o.order_date
-        FROM orders o
-        JOIN customers c ON o.customer_id = c.customer_id
-        JOIN products p ON o.product_id = p.product_id
-        ORDER BY o.order_date DESC
-    `;
-    db.query(sql, (err, result) => res.json(result));
-});
+/* Payment API */
+app.post("/pay", (req, res) => {
+    const { userId, merchantId, amount } = req.body;
 
-/* Highest Value Order */
-app.get("/highest", (req, res) => {
-    const sql = `
-        SELECT c.name, (o.quantity*p.price) AS total
-        FROM orders o
-        JOIN customers c ON o.customer_id=c.customer_id
-        JOIN products p ON o.product_id=p.product_id
-        ORDER BY total DESC LIMIT 1
-    `;
-    db.query(sql, (err, result) => res.json(result[0]));
-});
+    db.beginTransaction(err => {
+        if (err) return res.send("Transaction Error");
 
-/* Most Active Customer */
-app.get("/active", (req, res) => {
-    const sql = `
-        SELECT c.name, COUNT(*) AS orders_count
-        FROM orders o
-        JOIN customers c ON o.customer_id=c.customer_id
-        GROUP BY o.customer_id
-        ORDER BY orders_count DESC LIMIT 1
-    `;
-    db.query(sql, (err, result) => res.json(result[0]));
+        const deductUser =
+            "UPDATE users SET balance = balance - ? WHERE user_id = ?";
+
+        db.query(deductUser, [amount, userId], err => {
+            if (err) {
+                return db.rollback(() => res.send("Payment Failed"));
+            }
+
+            const addMerchant =
+                "UPDATE merchants SET balance = balance + ? WHERE merchant_id = ?";
+
+            db.query(addMerchant, [amount, merchantId], err => {
+                if (err) {
+                    return db.rollback(() =>
+                        res.send("Payment Failed – Rolled Back")
+                    );
+                }
+
+                db.commit(err => {
+                    if (err) {
+                        return db.rollback(() =>
+                            res.send("Commit Failed")
+                        );
+                    }
+                    res.send("✅ Payment Successful");
+                });
+            });
+        });
+    });
 });
 
 app.listen(3000, () =>
