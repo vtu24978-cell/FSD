@@ -1,53 +1,55 @@
 const express = require("express");
 const mysql = require("mysql2");
-const cors = require("cors");
-const path = require("path");
-
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("public"));
 
 const db = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "manju", // change if needed
-    database: "login"
+    password: "manju",
+    database: "order_db"
 });
 
-db.connect((err) => {
-    if (err) {
-        console.log("❌ Database connection failed:", err);
-    } else {
-        console.log("✅ Connected to MySQL");
-    }
-});
-// ================= LOGIN API =================
-app.post("/login", (req, res) => {
-    const { email, password } = req.body;
+db.connect(() => console.log("✅ MySQL Connected"));
 
-    const sql = "SELECT * FROM users WHERE email=? AND password=?";
-
-    db.query(sql, [email, password], (err, result) => {
-
-        if (err) {
-            console.log("❌ EXACT SQL ERROR:", err); // 👈 IMPORTANT
-            return res.status(500).send("Database Error");
-        }
-
-        console.log(result); // 👈 DEBUG
-
-        if (result.length > 0) {
-            res.send("success");
-        } else {
-            res.send("Invalid Email or Password");
-        }
-    });
+/* Order History */
+app.get("/orders", (req, res) => {
+    const sql = `
+        SELECT c.name, p.product_name, o.quantity,
+               p.price, (o.quantity*p.price) AS total, o.order_date
+        FROM orders o
+        JOIN customers c ON o.customer_id = c.customer_id
+        JOIN products p ON o.product_id = p.product_id
+        ORDER BY o.order_date DESC
+    `;
+    db.query(sql, (err, result) => res.json(result));
 });
 
-app.listen(3000, () => {
-    console.log("🚀 Server running at http://localhost:3000");
-    console.log("🚀 Server running at http://localhost:3000/login.html");
-    console.log("🚀 Server running at http://localhost:3000/login.feedback.html");
+/* Highest Value Order */
+app.get("/highest", (req, res) => {
+    const sql = `
+        SELECT c.name, (o.quantity*p.price) AS total
+        FROM orders o
+        JOIN customers c ON o.customer_id=c.customer_id
+        JOIN products p ON o.product_id=p.product_id
+        ORDER BY total DESC LIMIT 1
+    `;
+    db.query(sql, (err, result) => res.json(result[0]));
 });
+
+/* Most Active Customer */
+app.get("/active", (req, res) => {
+    const sql = `
+        SELECT c.name, COUNT(*) AS orders_count
+        FROM orders o
+        JOIN customers c ON o.customer_id=c.customer_id
+        GROUP BY o.customer_id
+        ORDER BY orders_count DESC LIMIT 1
+    `;
+    db.query(sql, (err, result) => res.json(result[0]));
+});
+
+app.listen(3000, () =>
+    console.log("🚀 Server running at http://localhost:3000")
+);

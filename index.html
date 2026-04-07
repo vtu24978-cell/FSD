@@ -1,33 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Real-Time Event Sync</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Order Management</title>
+    <style>
+        body { font-family: Arial; margin: 30px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
+        th { background: #f2f2f2; }
+        .box { background: #e6f2ff; padding: 10px; margin: 10px 0; }
+    </style>
 </head>
 <body>
 
-<h2>Real-Time Event Synchronization</h2>
+<h2>🛒 Customer Order History</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Customer</th>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Total</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody id="orders"></tbody>
+</table>
 
-<input type="text" id="msg" placeholder="Enter event message">
-<button onclick="sendEvent()">Send Event</button>
+<div class="box" id="highest"></div>
+<div class="box" id="active"></div>
 
-<ul id="events"></ul>
-
-<script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
+fetch("/orders").then(res=>res.json()).then(data=>{
+    let rows="";
+    data.forEach(o=>{
+        rows+=`<tr>
+            <td>${o.name}</td>
+            <td>${o.product_name}</td>
+            <td>${o.quantity}</td>
+            <td>${o.price}</td>
+            <td>${o.total}</td>
+            <td>${o.order_date}</td>
+        </tr>`;
+    });
+    document.getElementById("orders").innerHTML=rows;
+});
 
-function sendEvent() {
-    const message = document.getElementById("msg").value;
-    socket.emit("newEvent", message);
-    document.getElementById("msg").value = "";
-}
+fetch("/highest").then(res=>res.json()).then(d=>{
+    document.getElementById("highest").innerHTML =
+        "💰 Highest Value Order: " + d.name + " - ₹" + d.total;
+});
 
-// Receive synchronized events
-socket.on("syncEvent", (data) => {
-    const li = document.createElement("li");
-    li.textContent = data;
-    document.getElementById("events").appendChild(li);
+fetch("/active").then(res=>res.json()).then(d=>{
+    document.getElementById("active").innerHTML =
+        "🔥 Most Active Customer: " + d.name;
 });
 </script>
 
