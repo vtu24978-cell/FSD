@@ -1,57 +1,52 @@
 const express = require("express");
 const mysql = require("mysql2");
-const app = express();
+const path = require("path");
 
+const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "manju",
-    database: "payment_db"
+  host: "localhost",
+  user: "root",
+  password: "manju",
+  database: "audit_db"
 });
 
-db.connect(() => console.log("✅ MySQL Connected"));
-
-/* Payment API */
-app.post("/pay", (req, res) => {
-    const { userId, merchantId, amount } = req.body;
-
-    db.beginTransaction(err => {
-        if (err) return res.send("Transaction Error");
-
-        const deductUser =
-            "UPDATE users SET balance = balance - ? WHERE user_id = ?";
-
-        db.query(deductUser, [amount, userId], err => {
-            if (err) {
-                return db.rollback(() => res.send("Payment Failed"));
-            }
-
-            const addMerchant =
-                "UPDATE merchants SET balance = balance + ? WHERE merchant_id = ?";
-
-            db.query(addMerchant, [amount, merchantId], err => {
-                if (err) {
-                    return db.rollback(() =>
-                        res.send("Payment Failed – Rolled Back")
-                    );
-                }
-
-                db.commit(err => {
-                    if (err) {
-                        return db.rollback(() =>
-                            res.send("Commit Failed")
-                        );
-                    }
-                    res.send("✅ Payment Successful");
-                });
-            });
-        });
-    });
+db.connect(err => {
+  if (err) throw err;
+  console.log("MySQL Connected");
 });
 
-app.listen(3000, () =>
-    console.log("🚀 Server running at http://localhost:3000")
-);
+// Insert employee
+app.post("/add", (req, res) => {
+  const { name, department, salary } = req.body;
+  const sql = "INSERT INTO employees (emp_name, department, salary) VALUES (?, ?, ?)";
+  db.query(sql, [name, department, salary], err => {
+    if (err) throw err;
+    res.send("Employee added & logged successfully");
+  });
+});
+
+// Update salary
+app.post("/update", (req, res) => {
+  const { id, salary } = req.body;
+  const sql = "UPDATE employees SET salary=? WHERE emp_id=?";
+  db.query(sql, [salary, id], err => {
+    if (err) throw err;
+    res.send("Salary updated & logged successfully");
+  });
+});
+
+// View audit report
+app.get("/report", (req, res) => {
+  db.query("SELECT * FROM daily_activity_report", (err, result) => {
+    if (err) throw err;
+    res.json(result);
+  });
+});
+
+app.listen(3000, () => {
+  console.log("Server running on http://localhost:3000");
+});

@@ -1,22 +1,13 @@
 {
-  "userId": 1,
-  "merchantId": 1,
-  "amount": 2000,
-  "name": "fsd5",
+  "name": "audit-logging",
   "version": "1.0.0",
-  "description": "",
+  "description": "Automated Logging using Triggers & Views",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "body-parser": "^2.2.2",
-    "express": "^5.2.1",
-    "mysql2": "^3.18.2"
+    "express": "^4.18.2",
+    "mysql2": "^3.9.0"
   }
 }
